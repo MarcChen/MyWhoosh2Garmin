@@ -20,7 +20,7 @@ jobs:
       - name: Install project (from pyproject.toml)
         shell: bash
         run: |
-          uv pip install -r pyproject.toml
+          uv sync --frozen
 
       - name: Run myWhoosh2Garmin.py
         shell: bash

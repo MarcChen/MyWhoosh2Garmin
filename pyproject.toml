@@ -8,7 +8,7 @@ dependencies = [
     "pydantic-settings==2.11.0",
     "pydantic==2.12.4",
     "garth==0.5.2",
-    "fit-tool==0.9.13",
+    "fit-tool @ file:///home/marc/projets/MyWhoosh2Garmin/dist/fit_tool-0.9.13-py3-none-any.whl",
     "playwright==1.55.0",
 ]
 
@@ -17,10 +17,6 @@ dev = [
     "pre-commit==4.4.0",
     "ruff==0.14.5",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 88
