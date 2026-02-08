@@ -4,8 +4,8 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  run-on-self-hosted:
-    name: Run on self-hosted runner
+  run-myWhoosh2Garmin:
+    name: Run MyWhoosh2Garmin
     runs-on: ubuntu-slim
     steps:
       - name: Checkout repository
@@ -20,7 +20,7 @@ jobs:
       - name: Install project (from pyproject.toml)
         shell: bash
         run: |
-          uv pip install -r pyproject.toml
+          uv sync --frozen
 
       - name: Run myWhoosh2Garmin.py
         shell: bash
@@ -34,4 +34,7 @@ jobs:
           GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
         run: |
           set -euo pipefail
-          uv run myWhoosh2Garmin.py
+          source .venv/bin/activate
+          python myWhoosh2Garmin.py
+
+
