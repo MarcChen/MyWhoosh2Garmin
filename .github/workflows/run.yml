@@ -1,4 +1,4 @@
-name: Self-hosted runner — Run MyWhoosh2Garmin
+name: Run MyWhoosh2Garmin
 
 on:
   workflow_dispatch: {}
@@ -6,28 +6,16 @@ on:
 jobs:
   run-on-self-hosted:
     name: Run on self-hosted runner
-    runs-on: [self-hosted]
+    runs-on: ubuntu-slim
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      - name: Ensure `uv` CLI available (or install fallback)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if command -v uv >/dev/null 2>&1; then
-            uv --version
-            echo "uv found: $(command -v uv)"
-          else
-            echo "uv not found; installing via curl"
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-          fi
-
-      - name: Create virtual environment
-        shell: bash
-        run: |
-          uv venv --python 3.13
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
 
       - name: Install project (from pyproject.toml)
         shell: bash
@@ -46,5 +34,4 @@ jobs:
           GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
         run: |
           set -euo pipefail
-          source .venv/bin/activate
-          python myWhoosh2Garmin.py
+          uv run myWhoosh2Garmin.py
