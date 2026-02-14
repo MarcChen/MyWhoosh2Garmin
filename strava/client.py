@@ -129,6 +129,18 @@ class ActivityDatabase:
         )
         return bool(cursor.fetchone())
 
+    def get_downloaded_ids(self, activity_ids: List[int]) -> set[int]:
+        """Check which of the given activities are already downloaded."""
+        if not activity_ids:
+            return set()
+        placeholders = ",".join("?" for _ in activity_ids)
+        query = (
+            f"SELECT activity_id FROM downloaded_activities "
+            f"WHERE activity_id IN ({placeholders})"
+        )
+        cursor = self.conn.execute(query, activity_ids)
+        return {row[0] for row in cursor.fetchall()}
+
     def mark_downloaded(self, activity_id: int):
         """Mark an activity as downloaded."""
         self.conn.execute(
@@ -289,20 +301,20 @@ class ActivityDownloader:
         self.session = session
         self.db = database
 
-    def download_activity(self, activity_id: int) -> bool:
+    def download_activity(self, activity_id: int, check_db: bool = True) -> bool:
         """Download activity file with retry logic."""
         try:
-            return self._download_attempt(activity_id)
+            return self._download_attempt(activity_id, check_db)
         except requests.HTTPError as e:
             if e.response.status_code == 401:
                 logger.warning("Token expired during download, refreshing...")
                 self.session.auth.refresh_token()
-                return self._download_attempt(activity_id)
+                return self._download_attempt(activity_id, check_db)
             raise
 
-    def _download_attempt(self, activity_id: int) -> bool:
+    def _download_attempt(self, activity_id: int, check_db: bool = True) -> bool:
         """Perform single download attempt with metadata + streams."""
-        if self.db.is_downloaded(activity_id):
+        if check_db and self.db.is_downloaded(activity_id):
             return False
 
         # 1. Fetch activity metadata
@@ -434,9 +446,9 @@ if __name__ == "__main__":
         client = client_builder.with_auth().with_cookies().build()
 
         all_activities = client.get_filtered_activities()
-        new_activities = [
-            a for a in all_activities if not client.downloader.db.is_downloaded(a.id)
-        ]
+        activity_ids = [a.id for a in all_activities]
+        downloaded_ids = client.downloader.db.get_downloaded_ids(activity_ids)
+        new_activities = [a for a in all_activities if a.id not in downloaded_ids]
 
         if not new_activities:
             logger.warning("No new activities found")
@@ -451,7 +463,7 @@ if __name__ == "__main__":
 
         new_downloads = 0
         for activity in new_activities:
-            if client.downloader.download_activity(activity.id):
+            if client.downloader.download_activity(activity.id, check_db=False):
                 new_downloads += 1
 
         logger.info("\nDownload summary:")
