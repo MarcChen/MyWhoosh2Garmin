@@ -19,8 +19,6 @@ from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from requests import Session
 
-from strava.utils import sanitize_filename
-
 logger = logging.getLogger(__name__)
 
 
@@ -301,7 +299,9 @@ class ActivityDownloader:
         self.session = session
         self.db = database
 
-    def download_activity(self, activity_id: int, check_db: bool = True) -> bool:
+    def download_activity(
+        self, activity_id: int, check_db: bool = True
+    ) -> dict | None:
         """Download activity file with retry logic."""
         try:
             return self._download_attempt(activity_id, check_db)
@@ -312,10 +312,12 @@ class ActivityDownloader:
                 return self._download_attempt(activity_id, check_db)
             raise
 
-    def _download_attempt(self, activity_id: int, check_db: bool = True) -> bool:
+    def _download_attempt(
+        self, activity_id: int, check_db: bool = True
+    ) -> dict | None:
         """Perform single download attempt with metadata + streams."""
         if check_db and self.db.is_downloaded(activity_id):
-            return False
+            return None
 
         # 1. Fetch activity metadata
         activity_response = self.session.get(
@@ -326,7 +328,6 @@ class ActivityDownloader:
         activity_response.raise_for_status()
         activity_data = activity_response.json()
 
-        activity_name = activity_data.get("name", f"activity_{activity_id}")
         # Parse and trim start_date to only date part (YYYY-MM-DD)
         start_date_str = activity_data.get("start_date", "unknown_date")
         _ = start_date_str.split("T")[0] if "T" in start_date_str else start_date_str
@@ -363,18 +364,9 @@ class ActivityDownloader:
             "streams": streams_data,
         }
 
-        # 4. Save combined JSON
-        data_dir = Path(__file__).parent.parent / "data" / "raw"
-        data_dir.mkdir(parents=True, exist_ok=True)
-
-        safe_activity_name = sanitize_filename(activity_name)
-        json_filename = data_dir / f"{safe_activity_name}.json"
-        with open(json_filename, "w") as f:
-            json.dump(combined_data, f, indent=2, default=str)
-
         self.db.mark_downloaded(activity_id)
-        logger.info(f"✅ Downloaded {json_filename}")
-        return True
+        logger.info(f"✅ Successfully fetched data for activity {activity_id}")
+        return combined_data
 
 
 class StravaClient:

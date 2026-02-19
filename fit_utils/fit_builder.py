@@ -115,7 +115,11 @@ class ActivityData(BaseModel):
         """Load and parse the JSON activity file into the model."""
         with open(json_file_path, "r") as f:
             raw_data = json.load(f)
+        return cls.from_dict(raw_data)
 
+    @classmethod
+    def from_dict(cls, raw_data: dict) -> "ActivityData":
+        """Parse the raw activity data dictionary into the model."""
         # Extract metadata and streams
         metadata = raw_data.get("metadata", {})
         streams = raw_data.get("streams", {})
@@ -132,10 +136,14 @@ class ActivityData(BaseModel):
             "type": metadata.get("type"),
             "start_date": datetime.fromisoformat(metadata.get("start_date"))
             if metadata.get("start_date")
-            else None,
-            "start_date_local": datetime.fromisoformat(metadata.get("start_date_local"))
+            and isinstance(metadata.get("start_date"), str)
+            else metadata.get("start_date"),
+            "start_date_local": datetime.fromisoformat(
+                metadata.get("start_date_local")
+            )
             if metadata.get("start_date_local")
-            else None,
+            and isinstance(metadata.get("start_date_local"), str)
+            else metadata.get("start_date_local"),
             "timezone": metadata.get("timezone"),
             "utc_offset": metadata.get("utc_offset"),
             "average_speed": metadata.get("average_speed"),
@@ -194,10 +202,14 @@ class ActivityData(BaseModel):
 class MyWhooshFitBuilder:
     """Convert MyWhoosh activity JSON to FIT file format."""
 
-    def __init__(self, json_file_path: str):
-        """Initialize with path to MyWhoosh JSON file."""
-        self.json_path = json_file_path
-        self.activity_data = ActivityData.from_json_file(json_file_path)
+    def __init__(self, data: str | Path | dict):
+        """Initialize with path to MyWhoosh JSON file or raw data dictionary."""
+        if isinstance(data, (str, Path)):
+            self.json_path = str(data)
+            self.activity_data = ActivityData.from_json_file(self.json_path)
+        else:
+            self.json_path = None
+            self.activity_data = ActivityData.from_dict(data)
         self.builder = FitFileBuilder(auto_define=True)
         self.end_date_fit_ts = (
             self.activity_data.start_ts_miliseconds

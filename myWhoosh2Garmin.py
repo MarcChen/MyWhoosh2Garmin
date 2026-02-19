@@ -46,12 +46,13 @@ def main():
     )
 
     for activity in new_activities:
-        client.downloader.download_activity(activity.id)
+        activity_data = client.downloader.download_activity(activity.id)
+        if not activity_data:
+            continue
+
         safe_name = sanitize_filename(activity.name)
-        file_name = f"{safe_name}.json"
-        input_path = RAW_FIT_FILE_PATH / file_name
         output_path = RAW_FIT_FILE_PATH.parent / "processed" / f"{safe_name}.fit"
-        builder = MyWhooshFitBuilder(input_path)
+        builder = MyWhooshFitBuilder(activity_data)
         builder.build(output_path)
         upload_fit_file_to_garmin(output_path)
         try:
