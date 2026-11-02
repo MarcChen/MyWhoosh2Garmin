@@ -1,6 +1,9 @@
 name: Run MyWhoosh2Garmin
 
 on:
+  schedule:
+    # Runs every 30 minutes between 10am and 10pm (8:00-21:30 UTC covering CET/CEST)
+    - cron: '*/30 8-21 * * *'
   workflow_dispatch:
     inputs:
       activity_id:
@@ -11,7 +14,7 @@ on:
 jobs:
   run-myWhoosh2Garmin:
     name: Run MyWhoosh2Garmin
-    runs-on: ubuntu-slim
+    runs-on: self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,5 +40,12 @@ jobs:
           set -euo pipefail
           source .venv/bin/activate
           python myWhoosh2Garmin.py --activity-id "${{ inputs.activity_id }}"
+
+      - name: Trim runner logs & cleanup temp files
+        if: always()
+        shell: bash
+        run: |
+          find "${RUNNER_WORKSPACE}/../_diag" -type f -name "*.log" -mtime +3 -delete 2>/dev/null || true
+          rm -rf "${RUNNER_WORKSPACE}/../_temp"/* 2>/dev/null || true
 
 

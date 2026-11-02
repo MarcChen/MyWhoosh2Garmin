@@ -1,6 +1,7 @@
 import argparse
 import logging
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, List, Optional
 
@@ -22,7 +23,10 @@ PROCESSED_FIT_PATH = SCRIPT_DIR / "data" / "processed"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(log_file_path)
+# Rotating log file capped at 5MB with 2 backups (max 15MB total)
+file_handler = RotatingFileHandler(
+    log_file_path, maxBytes=5 * 1024 * 1024, backupCount=2, encoding="utf-8"
+)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
