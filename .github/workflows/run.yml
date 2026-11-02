@@ -23,7 +23,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
-          enable-cache: true
+          enable-cache: false
 
       - name: Install project (from pyproject.toml)
         shell: bash
@@ -41,11 +41,10 @@ jobs:
           source .venv/bin/activate
           python myWhoosh2Garmin.py --activity-id "${{ inputs.activity_id }}"
 
-      - name: Trim runner logs & cleanup temp files
+      - name: Trim runner logs
         if: always()
         shell: bash
         run: |
           find "${RUNNER_WORKSPACE}/../_diag" -type f -name "*.log" -mtime +3 -delete 2>/dev/null || true
-          rm -rf "${RUNNER_WORKSPACE}/../_temp"/* 2>/dev/null || true
 
 
