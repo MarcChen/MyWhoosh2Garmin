@@ -52,11 +52,15 @@ def get_credentials_for_garmin(garmin_settings: GarminSettings = GarminSettings(
     """
     logger.info("Authenticating...")
     try:
-        # First try to restore from environment variable
-        token_env = os.getenv("GARMIN_TOKENS")
+        # First try to restore from settings or environment variable
+        token_env = (
+            garmin_settings.garmin_tokens.get_secret_value()
+            if garmin_settings.garmin_tokens
+            else os.getenv("GARMIN_TOKENS")
+        )
         if token_env:
             garth.client.loads(token_env)
-            logger.info("Authenticated using GARMIN_TOKENS environment variable.")
+            logger.info("Authenticated using GARMIN_TOKENS.")
             return
         # Fallback to username/password login
         garth.login(

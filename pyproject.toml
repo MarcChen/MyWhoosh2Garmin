@@ -5,12 +5,15 @@ description = "Upload MyWhoosh activities to Garmin Connect with proper fixes"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pydantic-settings==2.11.0",
-    "pydantic==2.12.4",
-    "garth==0.5.2",
-    "fit-tool @ file:///home/marc/projets/MyWhoosh2Garmin/dist/fit_tool-0.9.13-py3-none-any.whl",
-    "playwright==1.55.0",
+    "pydantic-settings>=2.11.0",
+    "pydantic>=2.12.4",
+    "garth>=0.5.2",
+    "requests>=2.31.0",
+    "fit-tool",
 ]
+
+[tool.uv.sources]
+fit-tool = { path = "dist/fit_tool-0.9.13-py3-none-any.whl" }
 
 [project.optional-dependencies]
 dev = [

@@ -1,7 +1,12 @@
 name: Run MyWhoosh2Garmin
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      activity_id:
+        description: "Optional Intervals.icu Activity ID (e.g. i204876551). Leave empty to check last 5."
+        required: false
+        default: ""
 
 jobs:
   run-myWhoosh2Garmin:
@@ -25,16 +30,12 @@ jobs:
       - name: Run myWhoosh2Garmin.py
         shell: bash
         env:
-          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
-          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
-          STRAVA_ACCESS_TOKEN: ${{ secrets.STRAVA_ACCESS_TOKEN }}
-          STRAVA_EXPIRES_AT: ${{ secrets.STRAVA_EXPIRES_AT }}
-          STRAVA_EXPIRES_IN: ${{ secrets.STRAVA_EXPIRES_IN }}
-          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          INTERVALS_API_KEY: ${{ secrets.INTERVALS_API_KEY }}
+          INTERVALS_ATHLETE_ID: ${{ secrets.INTERVALS_ATHLETE_ID }}
           GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
         run: |
           set -euo pipefail
           source .venv/bin/activate
-          python myWhoosh2Garmin.py
+          python myWhoosh2Garmin.py --activity-id "${{ inputs.activity_id }}"
 
 
