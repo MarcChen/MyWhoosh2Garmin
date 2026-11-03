@@ -2,8 +2,9 @@ name: Run MyWhoosh2Garmin
 
 on:
   schedule:
-    # Runs every 30 minutes between 10am and 10pm (8:00-21:30 UTC covering CET/CEST)
-    - cron: '*/30 8-21 * * *'
+    # Once a day at 22:00 Europe/Paris. GitHub Actions cron is UTC:
+    # 21:00 UTC = 22:00 CET (winter) / 23:00 CEST (summer).
+    - cron: '0 21 * * *'
   workflow_dispatch:
     inputs:
       activity_id:
